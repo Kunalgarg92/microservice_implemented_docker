@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: K9254490344k@
+      MYSQL_DATABASE: api-gateway-security
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - micro-net
+
+  eureka-server:
+    build:
+      context: ./Eureka-server-Registry-flightapp
+    container_name: eureka-server
+    ports:
+      - "9997:9997"
+    networks:
+      - micro-net
+
+  booking-service:
+    build:
+      context: ./booking-service-micro-assignment-1
+    container_name: booking-service
+    ports:
+      - "9998:9998"
+    depends_on:
+      - eureka-server
+      - mysql
+    networks:
+      - micro-net
+
+  flight-service:
+    build:
+      context: ./flight-service-micro-assignment
+    container_name: flight-service
+    ports:
+      - "9999:9999"
+    depends_on:
+      - eureka-server
+      - mysql
+    networks:
+      - micro-net
+
+  api-gateway:
+    build:
+      context: ./api-gateway-assignment
+    container_name: api-gateway
+    ports:
+      - "9996:9996"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - micro-net
+
+networks:
+  micro-net:
+    driver: bridge
