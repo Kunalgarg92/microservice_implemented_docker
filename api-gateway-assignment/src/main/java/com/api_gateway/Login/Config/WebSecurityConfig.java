@@ -1,4 +1,5 @@
 package com.api_gateway.Login.Config;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,10 +9,14 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import reactor.core.publisher.Mono;
+import org.springframework.http.HttpMethod;
+
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -30,42 +35,71 @@ public class WebSecurityConfig {
 
     @Bean
     public ReactiveJwtDecoder jwtDecoder(@Value("${jwt.secret}") String secret) {
-        SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        SecretKey key = new SecretKeySpec(
+                secret.getBytes(StandardCharsets.UTF_8),
+                "HmacSHA256"
+        );
         return NimbusReactiveJwtDecoder.withSecretKey(key).build();
     }
 
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http,
-                                                            ReactiveJwtDecoder jwtDecoder) {
+    public CorsWebFilter corsWebFilter() {
 
-        http.csrf(ServerHttpSecurity.CsrfSpec::disable);
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("*")); 
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
-        http.authorizeExchange(exchanges -> exchanges
-                .pathMatchers("/auth/**").permitAll()  // login, signup, logout
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return new CorsWebFilter(source);
+    }
+
+
+    @Bean
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+
+        http
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .authorizeExchange(exchanges -> exchanges
+                .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
+                .pathMatchers("/auth/**").permitAll()              
                 .anyExchange().authenticated()
-        );
-
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> 
-            jwt.jwtDecoder(jwtDecoder)
-               .jwtAuthenticationConverter(source ->
-                   Mono.just(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                       source.getSubject(),
-                       "n/a",
-                       extractAuthorities(source)
-                   ))
-               )
-        ));
+            )
+            .oauth2ResourceServer(oauth2 ->
+                oauth2.jwt(jwt ->
+                    jwt.jwtAuthenticationConverter(this::jwtAuthConverter)
+                )
+            );
 
         return http.build();
+    }
+
+    private Mono<UsernamePasswordAuthenticationToken> jwtAuthConverter(Jwt jwt) {
+        List<SimpleGrantedAuthority> authorities =
+                extractAuthorities(jwt);
+
+        return Mono.just(
+                new UsernamePasswordAuthenticationToken(
+                        jwt.getSubject(),
+                        "n/a",
+                        authorities
+                )
+        );
     }
 
     private List<SimpleGrantedAuthority> extractAuthorities(Jwt jwt) {
         Object roles = jwt.getClaims().get("roles");
         if (roles instanceof List<?> list) {
             return list.stream()
-                .map(Object::toString)
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+                    .map(Object::toString)
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
         }
         return List.of();
     }

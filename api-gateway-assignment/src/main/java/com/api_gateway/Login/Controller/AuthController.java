@@ -59,7 +59,6 @@ public class AuthController {
                     .body(new MessageResponse("Error: Invalid password"));
         }
 
-        // ✅ Generate Token
         String token = jwtService.generateToken(
                 user.getUsername(),
                 user.getRoles().stream()

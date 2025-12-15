@@ -30,20 +30,25 @@ import java.util.stream.Collectors;
 @Service
 public class BookingServiceImplementation implements BookingService {
 
-    @Autowired
-    private BookingRepository bookingRepo;
-
-    @Autowired
-    private PassengerRepository passengerRepo;
-
-    @Autowired
-    private FlightServiceClient flightClient;
-
-    @Autowired
-    private BookingEventProducer bookingEventProducer;
+	  private final BookingRepository bookingRepo;
+	  private final PassengerRepository passengerRepo;
+	  private final FlightServiceClient flightClient;
+	  private final BookingEventProducer bookingEventProducer;
 
     
     private static final Random RNG = new Random();
+    
+    public BookingServiceImplementation(
+            BookingRepository bookingRepo,
+            PassengerRepository passengerRepo,
+            FlightServiceClient flightClient,
+            BookingEventProducer bookingEventProducer
+    ) {
+        this.bookingRepo = bookingRepo;
+        this.passengerRepo = passengerRepo;
+        this.flightClient = flightClient;
+        this.bookingEventProducer = bookingEventProducer;
+    }
 
     @Override
     public Mono<BookingResponse> bookFlight(String flightId, BookingRequest request) {
@@ -141,7 +146,9 @@ public class BookingServiceImplementation implements BookingService {
                                 BookingResponse response =
                                         buildBookingResponse(savedBooking, savedPassengers, "Booking successful");
                                 BookingEvent event = convertToEvent(response);
-                                bookingEventProducer.publishBookingConfirmed(event);
+                                if (bookingEventProducer != null) {
+                                    bookingEventProducer.publishBookingConfirmed(event);
+                                }
                                 return response;
                             });
                 });

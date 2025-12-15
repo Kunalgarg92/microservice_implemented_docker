@@ -19,6 +19,45 @@ services:
     networks:
       - micro-net
 
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - micro-net
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - micro-net
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    depends_on:
+      - zookeeper
+    networks:
+      - micro-net
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1100:1025"
+      - "8025:8025"
+    networks:
+      - micro-net
+
   eureka-server:
     build:
       context: ./Eureka-server-Registry-flightapp
@@ -37,6 +76,7 @@ services:
     depends_on:
       - eureka-server
       - mysql
+      - kafka
     networks:
       - micro-net
 
@@ -48,7 +88,8 @@ services:
       - "9999:9999"
     depends_on:
       - eureka-server
-      - mysql
+      - mongodb
+      - kafka
     networks:
       - micro-net
 
@@ -62,6 +103,8 @@ services:
       mysql:
         condition: service_healthy
       eureka-server:
+        condition: service_started
+      kafka:
         condition: service_started
     networks:
       - micro-net
