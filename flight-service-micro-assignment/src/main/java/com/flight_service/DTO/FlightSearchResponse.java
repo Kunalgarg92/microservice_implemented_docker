@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class FlightSearchResponse {
-	
+	private String flightId;
 	private String airlineName;
     private String flightNumber;
     private LocalDateTime departureTime;

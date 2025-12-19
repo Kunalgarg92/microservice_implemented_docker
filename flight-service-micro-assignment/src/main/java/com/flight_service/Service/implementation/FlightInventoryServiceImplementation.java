@@ -75,6 +75,7 @@ public class FlightInventoryServiceImplementation implements FlightInventoryServ
 
         FlightSearchResponse res = new FlightSearchResponse();
 
+        res.setFlightId(onward.getId());
         res.setAirlineName(onward.getAirlineName());
         res.setFlightNumber(onward.getFlightNumber());
         res.setDepartureTime(onward.getDepartureTime());
