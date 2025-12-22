@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: booking-service-micro-assignment
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/booking-Services
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: booking-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+  mail:
+    host: localhost
+    port: 1100
+    username:
+    password:
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+      mail.mime.charset: UTF-8
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+    circuitbreaker:
+      resilience4j:
+        enabled: true
+
+server:
+  port: 9998
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.http: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.mongodb.driver: DEBUG
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:9997/eureka/
+
+booking:
+  kafka:
+    topic: booking-confirmed

@@ -3,6 +3,8 @@ package com.api_gateway.Login.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -80,18 +82,18 @@ public class WebSecurityConfig {
         return http.build();
     }
 
-    private Mono<UsernamePasswordAuthenticationToken> jwtAuthConverter(Jwt jwt) {
-        List<SimpleGrantedAuthority> authorities =
-                extractAuthorities(jwt);
+    private Mono<? extends AbstractAuthenticationToken> jwtAuthConverter(Jwt jwt) {
+    List<SimpleGrantedAuthority> authorities = extractAuthorities(jwt);
 
-        return Mono.just(
-                new UsernamePasswordAuthenticationToken(
-                        jwt.getSubject(),
-                        "n/a",
-                        authorities
-                )
-        );
-    }
+    return Mono.just(
+        new UsernamePasswordAuthenticationToken(
+            jwt.getSubject(),
+            "n/a",
+            authorities
+        )
+    );
+}
+
 
     private List<SimpleGrantedAuthority> extractAuthorities(Jwt jwt) {
         Object roles = jwt.getClaims().get("roles");

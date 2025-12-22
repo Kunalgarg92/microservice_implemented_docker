@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: flight-service-micro-assignment
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: flight-Service
+
+server:
+  port: 9999
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.http: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.mongodb.driver: DEBUG
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:9997/eureka/
