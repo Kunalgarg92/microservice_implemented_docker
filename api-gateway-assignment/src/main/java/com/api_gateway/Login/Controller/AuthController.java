@@ -18,6 +18,7 @@ import com.api_gateway.Login.jwt.JwtService;
 import com.api_gateway.Login.model.Erole;
 import com.api_gateway.Login.model.Role;
 import com.api_gateway.Login.model.User;
+import com.api_gateway.Login.Service.UserService;
 
 import java.util.List;
 import java.util.Set;
@@ -40,46 +41,72 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(
-            @Valid @RequestBody LoginRequest loginRequest) {
+    @Autowired
+    private UserService userService;
 
-        User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElse(null);
+   @PostMapping("/signin")
+public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
-        if (user == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageResponse("Error: User not found"));
-        }
+    User user = userRepository.findByUsername(loginRequest.getUsername())
+            .orElse(null);
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageResponse("Error: Invalid password"));
-        }
-
-        String token = jwtService.generateToken(
-                user.getUsername(),
-                user.getRoles().stream()
-                        .map(role -> role.getName().name())
-                        .toList()
-        );
-
-        List<String> roles = user.getRoles().stream()
-                .map(role -> role.getName().name())
-                .collect(Collectors.toList());
-
-        UserInfoResponse response = new UserInfoResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                roles,
-                token
-        );
-
-        return ResponseEntity.ok(response);
+    if (user == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new MessageResponse("Error: User not found"));
     }
+
+    if (user.getLockTime() != null && user.getLockTime().isAfter(java.time.LocalDateTime.now())) {
+        return ResponseEntity.status(HttpStatus.LOCKED)
+                .body(new MessageResponse("Error: Account is locked. Try again later."));
+    }
+
+    if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        
+        user.setFailedAttempts(user.getFailedAttempts() + 1);
+        if (user.getFailedAttempts() >= 5) {
+            user.setLockTime(java.time.LocalDateTime.now().plusMinutes(30));
+        }
+        userRepository.save(user);
+        
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new MessageResponse("Error: Invalid password"));
+    }
+
+    user.setFailedAttempts(0);
+    user.setLockTime(null);
+    userRepository.save(user);
+
+    if (user.isIsDefaultPassword()) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new MessageResponse("REQUIRED_ACTION: CHANGE_DEFAULT_PASSWORD"));
+    }
+
+    if (user.getPasswordLastChanged().plusDays(180).isBefore(java.time.LocalDateTime.now())) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new MessageResponse("REQUIRED_ACTION: PASSWORD_EXPIRED"));
+    }
+
+    String token = jwtService.generateToken(
+            user.getUsername(),
+            user.getRoles().stream()
+                    .map(role -> role.getName().name())
+                    .toList()
+    );
+
+    List<String> roles = user.getRoles().stream()
+            .map(role -> role.getName().name())
+            .collect(Collectors.toList());
+
+    UserInfoResponse response = new UserInfoResponse(
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            roles,
+            token
+    );
+
+    return ResponseEntity.ok(response);
+}
 
 
     @PostMapping("/signup")
@@ -137,4 +164,17 @@ public class AuthController {
                 new MessageResponse("You've been signed out! Please delete the token on client side.")
         );
     }
+
+    @PostMapping("/change-password")
+public ResponseEntity<?> changePassword(@RequestParam String username, @RequestParam String newPassword) {
+    User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+            
+    try {
+        userService.updatePassword(user, newPassword);
+        return ResponseEntity.ok(new MessageResponse("Password updated successfully!"));
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+    }
+}
 }

@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +23,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;   // ✅ MySQL primary key
+    private Long id;  
 
     @NotBlank
     @Size(max = 20)
@@ -45,6 +48,23 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles = new HashSet<>();
+
+     @Column(name = "password_last_changed")
+    private LocalDateTime passwordLastChanged = LocalDateTime.now();
+
+    @Column(name = "is_default_password")
+    private boolean isDefaultPassword = true;
+
+    @Column(name = "failed_attempts")
+    private int failedAttempts = 0;
+
+    @Column(name = "lock_time")
+    private LocalDateTime lockTime;
+
+    @ElementCollection
+    @CollectionTable(name = "user_password_history", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "password_hash")
+    private List<String> passwordHistory = new ArrayList<>();
 
     public User() {}
 
@@ -93,4 +113,47 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
+    
+    public LocalDateTime getPasswordLastChanged() {
+        return passwordLastChanged;
+    }
+
+    
+    public void setPasswordLastChanged(LocalDateTime passwordLastChanged) {
+        this.passwordLastChanged = passwordLastChanged;
+    }
+
+    public boolean isIsDefaultPassword() {
+        return isDefaultPassword;
+    }
+
+    public void setIsDefaultPassword(boolean isDefaultPassword) {
+        this.isDefaultPassword = isDefaultPassword;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    public LocalDateTime getLockTime() {
+        return lockTime;
+    }
+
+    public void setLockTime(LocalDateTime lockTime) {
+        this.lockTime = lockTime;
+    }
+
+    public List<String> getPasswordHistory() {
+        return passwordHistory;
+    }
+
+    public void setPasswordHistory(List<String> passwordHistory) {
+        this.passwordHistory = passwordHistory;
+    }
+
 }

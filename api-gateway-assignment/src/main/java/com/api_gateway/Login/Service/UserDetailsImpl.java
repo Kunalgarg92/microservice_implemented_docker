@@ -22,22 +22,28 @@ public class UserDetailsImpl implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    // ✅ THIS IS THE REQUIRED CONSTRUCTOR
-    public UserDetailsImpl(Long id,
-                           String username,
-                           String email,
-                           String password,
-                           Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.authorities = authorities;
-    }
+   private boolean isDefaultPassword;
+
+public UserDetailsImpl(Long id, String username, String email, String password, 
+                       boolean isDefaultPassword, 
+                       Collection<? extends GrantedAuthority> authorities) {
+    this.id = id;
+    this.username = username;
+    this.email = email;
+    this.password = password;
+    this.isDefaultPassword = isDefaultPassword;
+    this.authorities = authorities;
+}
 
     public Long getId() {
         return id;
     }
+
+    public boolean isDefaultPassword() {
+    return isDefaultPassword;
+    }
+
+
 
     public String getEmail() {
         return email;
