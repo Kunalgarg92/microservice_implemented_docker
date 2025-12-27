@@ -10,7 +10,7 @@
 FROM eclipse-temurin:17-jre
 WORKDIR /Eureka-server-Registry-flightapp
 
-COPY target/Eureka-server-Registry-flightapp-0.0.1-SNAPSHOT.jar
+COPY target/Eureka-server-Registry-flightapp-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8761
 

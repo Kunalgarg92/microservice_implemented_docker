@@ -10,7 +10,7 @@
 FROM eclipse-temurin:17-jre
 WORKDIR /booking-service-micro-assignment-1
 
-COPY target/booking-service-micro-assignment-1-0.0.1-SNAPSHOT.jar
+COPY target/booking-service-micro-assignment-1-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8081
 

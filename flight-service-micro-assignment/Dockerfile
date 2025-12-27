@@ -10,7 +10,7 @@
 FROM eclipse-temurin:17-jre
 WORKDIR /flight-service-micro-assignment
 
-COPY target/flight-service-micro-assignment-0.0.1-SNAPSHOT.jar
+COPY target/flight-service-micro-assignment-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8082
 

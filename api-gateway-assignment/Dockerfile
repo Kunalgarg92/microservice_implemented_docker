@@ -10,7 +10,7 @@
 FROM eclipse-temurin:21-jre
 WORKDIR /api-gateway-assignment
 
-COPY target/api-gateway-assignment-0.0.1-SNAPSHOT.jar
+COPY target/api-gateway-assignment-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
