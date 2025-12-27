@@ -8,9 +8,9 @@
 # RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
-WORKDIR /app
+WORKDIR /flight-service-micro-assignment
 
-COPY --from=builder /app/target/*.jar app.jar
+COPY target/flight-service-micro-assignment-0.0.1-SNAPSHOT.jar
 
 EXPOSE 8082
 

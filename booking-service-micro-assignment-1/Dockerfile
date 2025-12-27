@@ -8,9 +8,9 @@
 # RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
-WORKDIR /app
+WORKDIR /booking-service-micro-assignment-1
 
-COPY --from=builder /app/target/*.jar app.jar
+COPY target/booking-service-micro-assignment-1-0.0.1-SNAPSHOT.jar
 
 EXPOSE 8081
 

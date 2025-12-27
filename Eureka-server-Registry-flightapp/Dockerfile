@@ -8,9 +8,9 @@
 # RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
-WORKDIR /app
+WORKDIR /Eureka-server-Registry-flightapp
 
-COPY --from=builder /app/target/*.jar app.jar
+COPY target/Eureka-server-Registry-flightapp-0.0.1-SNAPSHOT.jar
 
 EXPOSE 8761
 

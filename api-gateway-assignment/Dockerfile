@@ -8,9 +8,9 @@
 # RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
-WORKDIR /app
+WORKDIR /api-gateway-assignment
 
-COPY --from=builder /app/target/*.jar app.jar
+COPY target/api-gateway-assignment-0.0.1-SNAPSHOT.jar
 
 EXPOSE 8080
 
